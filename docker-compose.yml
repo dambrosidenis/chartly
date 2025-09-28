@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: chartly-postgres
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_password
+      SEED_FILE: ${SEED_FILE:-seed-email-events.sql}
+    ports:
+      - "5434:5432"
+    volumes:
+      - ./docker/init:/docker-entrypoint-initdb.d
+      - ./docker/seed-files:/seed-files
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d analytics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
