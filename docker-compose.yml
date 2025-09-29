@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16
@@ -19,3 +17,43 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - chartly-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chartly-app
+    ports:
+      - "3000:3000"
+    environment:
+      # Mistral AI Configuration
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-latest}
+      
+      # PostgreSQL Configuration (using container networking)
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGDATABASE=${PGDATABASE:-analytics}
+      - PGUSER=${PGUSER:-analytics_ro}
+      - PGPASSWORD=${PGPASSWORD}
+      
+      # Operational Configuration
+      - MAX_ATTEMPTS=${MAX_ATTEMPTS:-3}
+      - QUERY_TIMEOUT_MS=${QUERY_TIMEOUT_MS:-4000}
+      - MAX_RESULT_ROWS=${MAX_RESULT_ROWS:-5000}
+      - SCHEMA_CACHE_TTL_MS=${SCHEMA_CACHE_TTL_MS:-60000}
+      
+      # Schema Investigation Configuration
+      - MAX_SCHEMA_INVESTIGATION_STEPS=${MAX_SCHEMA_INVESTIGATION_STEPS:-5}
+      - ENABLE_SCHEMA_INVESTIGATION=${ENABLE_SCHEMA_INVESTIGATION:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - chartly-network
+
+networks:
+  chartly-network:
+    driver: bridge
