@@ -2,49 +2,84 @@
 
 A local-only webapp that converts natural language questions into SQL queries, executes them against PostgreSQL container, and renders charts dynamically.
 
-## Prerequisites
-
-Before getting started, ensure you have the following installed:
-
-- **Node.js** (checked for version v20.18)
-- **Docker** (checked for version v27.4.1, with colima v0.8.1)
-
 ## Quick Start
 
-### 1. Install Dependencies
+### Option 1: Docker (Recommended)
 
+The easiest way to run Chartly is using Docker, which handles all dependencies and setup automatically.
+
+#### Prerequisites
+- **Docker** and **Docker Compose** installed (checked for version v27.4.1, with colima v0.8.1)
+
+#### Steps
+
+1. **Clone and configure environment**:
+```bash
+cp env.example .env
+```
+
+2. **Edit `.env` and add your Mistral API key**:
+```bash
+MISTRAL_API_KEY=your_actual_api_key_here
+```
+
+**Note**: You can get a free Mistral API key at https://console.mistral.ai/
+
+3. **Start the entire application**:
+```bash
+docker-compose up --build
+```
+
+4. **Access the application**:
+   - **UI**: http://localhost:3000
+   - **Database**: localhost:5434 (if you need direct access)
+
+The Docker setup includes:
+- ✅ Next.js application on port 3000
+- ✅ PostgreSQL database with sample data
+- ✅ Automatic database initialization
+- ✅ Internet access for Mistral API
+- ✅ Container networking configured
+
+### Option 2: Local Development
+
+If you prefer to run the application locally:
+
+#### Prerequisites
+- **Node.js** (checked for version v20.18)
+- **Docker** (for PostgreSQL only)
+
+#### Steps
+
+1. **Install Dependencies**:
 ```bash
 npm install --legacy-peer-deps
 ```
 
-> [!NOTE]
-> The `--legacy-peer-deps` flag is required due to peer dependency conflict between `react-simple-maps` and React 19.
+**Note**: The `--legacy-peer-deps` flag is required due to peer dependency conflicts between react-simple-maps and React 19.
 
-### 2. Start PostgreSQL Database
-
+2. **Start PostgreSQL Database**:
 Choose your domain (more info at [docker/README.md](docker/README.md)) and start the database:
 
 ```bash
-docker-compose up -d
+docker-compose up postgres -d
 ```
 
-### 3. Configure Environment
-
+3. **Configure Environment**:
 Copy the example environment file and add your Mistral API key:
 
 ```bash
 cp env.example .env
 ```
 
-Edit `.env` and add your Mistral API key:
-```
+For local development, update the database connection in `.env`:
+```bash
+PGHOST=localhost
+PGPORT=5434
 MISTRAL_API_KEY=your_actual_api_key_here
 ```
 
-**Note**: You can get a free Mistral API key at https://console.mistral.ai/
-
-### 4. Start the Application
-
+4. **Start the Application**:
 ```bash
 npm run dev
 ```
@@ -135,13 +170,24 @@ ENABLE_SCHEMA_INVESTIGATION=true
 
 ## Database Management
 
+### Docker Setup Commands
+
 ```bash
-# Stop database
+# Start entire application (app + database)
+docker-compose up --build
+
+# Start only database (for local development)
+docker-compose up postgres -d
+
+# Stop all services
 docker-compose down
 
 # Reset database (removes all data and restarts with fresh seed data)
 docker-compose down -v
-docker-compose up -d
+docker-compose up --build
+
+# View application logs
+docker-compose logs app
 
 # View database logs
 docker-compose logs postgres
